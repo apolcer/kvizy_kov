@@ -72,7 +72,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;displ
 .correct-answer-display{font-size:13px;color:rgba(255,255,255,0.55);margin-top:.4rem}
 .correct-answer-display strong{color:rgba(255,255,255,0.85)}
 
-.next-btn{width:100%;padding:.85rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;display:none;transition:background .15s}
+.next-btn{width:100%;padding:.85rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:background .15s}
 .next-btn:hover{background:rgba(255,255,255,0.18)}
 
 /* RESULT */
@@ -143,7 +143,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;displ
   <div class="word-bank" id="word-bank"></div>
 
   <div class="feedback" id="feedback"></div>
-  <button class="next-btn" id="next-btn" onclick="nextQuestion()">Další otázka →</button>
+  <button class="next-btn" id="next-btn">Zkontrolovat →</button>
 </div>
 
 <!-- RESULT -->
@@ -368,7 +368,8 @@ function showQuestion(){
   else { imgEl.style.display='none'; imgEl.src=''; }
 
   document.getElementById('feedback').style.display='none';
-  document.getElementById('next-btn').style.display='none';
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent='Zkontrolovat →';
   document.getElementById('answer-zone').innerHTML='';
   document.getElementById('answer-zone').className='answer-zone';
 
@@ -453,7 +454,6 @@ function checkAnswer(){
   return JSON.stringify(placed) === JSON.stringify(q.answer);
 }
 
-// Auto-check when next is clicked — or manual check
 function evaluateAnswer(){
   if(answered) return;
   answered = true;
@@ -483,12 +483,14 @@ function evaluateAnswer(){
     wrong++;
     zone.classList.add('wrong');
     fb.className='feedback wrong';
-    // Show correct answer
     const correctHtml = q.answer.map(w=>`<span class="chip chip-correct-answer" style="display:inline-flex;margin:2px 3px;padding:3px 8px;border-radius:6px;font-size:13px">${w}</span>`).join('');
     fb.innerHTML=`✗ Špatně.<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br>${correctHtml}`;
   }
   fb.style.display='block';
-  document.getElementById('next-btn').style.display='block';
+
+  // Change button to "Next"
+  const btn = document.getElementById('next-btn');
+  btn.textContent = current+1 >= Q_PER_ROUND ? 'Zobrazit výsledek →' : 'Další otázka →';
 }
 
 function timeUp(){
@@ -505,11 +507,11 @@ function timeUp(){
   fb.className='feedback wrong';
   fb.innerHTML=`⏱ Čas vypršel!<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br>${correctHtml}`;
   fb.style.display='block';
-  document.getElementById('next-btn').style.display='block';
+  const btn = document.getElementById('next-btn');
+  btn.textContent = current+1 >= Q_PER_ROUND ? 'Zobrazit výsledek →' : 'Další otázka →';
 }
 
 function nextQuestion(){
-  if(!answered){ evaluateAnswer(); return; }
   current++;
   if(current >= Q_PER_ROUND) showResults();
   else showQuestion();
@@ -536,13 +538,11 @@ function showResults(){
   document.getElementById('progress').style.width='100%';
 }
 
-// Clicking "Další" without placing words evaluates empty answer
+// Single clean event listener on next button
 document.getElementById('next-btn').addEventListener('click', ()=>{
   if(!answered){ evaluateAnswer(); }
   else { nextQuestion(); }
-}, {capture:true});
-// Override the onclick to use evaluateAnswer flow
-document.getElementById('next-btn').removeAttribute('onclick');
+});
 </script>
 </body>
 </html>
