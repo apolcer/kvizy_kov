@@ -136,7 +136,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;displ
     <img id="q-img" class="q-img" style="display:none" src="" alt="">
   </div>
 
-  <div class="answer-zone-label">Vaše odpověď — klikněte nebo přetáhněte slova sem:</div>
+  <div class="answer-zone-label" id="answer-zone-label">Vaše odpověď — klikněte nebo přetáhněte slova sem:</div>
   <div class="answer-zone" id="answer-zone"></div>
 
   <div class="word-bank-label">Dostupná slova:</div>
@@ -166,434 +166,372 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;displ
 <script>
 // ══════════════════════════════════════════════
 // BANKA OTÁZEK – SLOVNÍ SKLÁDANKA
-// Každá otázka má:
-//   q  = text otázky
-//   img = volitelný obrázek (relativní cesta)
-//   answer = pole slov ve SPRÁVNÉM pořadí
-//   distractors = záměrně chybná slova navíc
+//   ordered: true  = pořadí ZÁLEŽÍ (celá věta/definice)
+//   ordered: false = pořadí NEZÁLEŽÍ (výčet bodů)
 // ══════════════════════════════════════════════
 const BANK = [
-  // KATEGORIE VOZIDEL
+  // ── KATEGORIE VOZIDEL ──
   {
-    q: "Co zahrnuje kategorie L?",
-    answer: ["motorová vozidla", "zpravidla", "s méně", "než čtyřmi koly"],
-    distractors: ["s více", "než šesti koly", "přípojná"]
+    q: "Doplňte definici: Kategorie L jsou ...",
+    ordered: true,
+    answer: ["motorová vozidla zpravidla s méně než čtyřmi koly"],
+    distractors: ["motorová vozidla s nejméně čtyřmi koly", "přípojná vozidla s méně než čtyřmi koly", "motorová vozidla pro dopravu osob", "traktory zemědělské nebo lesnické"]
   },
   {
-    q: "Co zahrnuje kategorie M?",
-    answer: ["motorová vozidla", "nejméně čtyři kola", "pro dopravu osob"],
-    distractors: ["pro dopravu nákladů", "méně než čtyři kola", "přípojná vozidla"]
+    q: "Doplňte definici: Kategorie M jsou ...",
+    ordered: true,
+    answer: ["motorová vozidla která mají nejméně čtyři kola a používají se pro dopravu osob"],
+    distractors: ["motorová vozidla která mají nejméně čtyři kola a používají se pro dopravu nákladů", "přípojná vozidla s nejméně čtyřmi koly", "motorová vozidla zpravidla s méně než čtyřmi koly"]
   },
   {
-    q: "Co zahrnuje kategorie N?",
-    answer: ["motorová vozidla", "nejméně čtyři kola", "pro dopravu nákladů"],
-    distractors: ["pro dopravu osob", "traktory", "méně než dvě kola"]
+    q: "Doplňte definici: Kategorie N jsou ...",
+    ordered: true,
+    answer: ["motorová vozidla která mají nejméně čtyři kola a používají se pro dopravu nákladů"],
+    distractors: ["motorová vozidla která mají nejméně čtyři kola a používají se pro dopravu osob", "přípojná vozidla určená pro dopravu nákladů", "motorová vozidla zpravidla s méně než čtyřmi koly"]
   },
   {
-    q: "Co je to kategorie O?",
-    answer: ["přípojná vozidla"],
-    distractors: ["pracovní stroje", "traktory", "motorová vozidla", "zvláštní vozidla"]
+    q: "Kategorie O jsou přípojná vozidla. Co je kategorie T?",
+    ordered: true,
+    answer: ["traktory zemědělské nebo lesnické"],
+    distractors: ["pracovní stroje", "přípojná vozidla pro zemědělství", "motorová vozidla pro terén", "speciální vozidla kategorie S"]
   },
   {
-    q: "Co je to kategorie T?",
-    answer: ["traktory", "zemědělské", "nebo lesnické"],
-    distractors: ["přípojná vozidla", "pracovní stroje", "motorové", "kategorii M"]
+    q: "Jak se dělí kategorie S?",
+    ordered: true,
+    answer: ["pracovní stroje"],
+    distractors: ["sportovní vozidla", "speciální traktory", "přívěsy a návěsy", "terénní vozidla"]
   },
-  // ZÁKLADNÍ POJMY
+
+  // ── ZÁKLADNÍ POJMY ──
   {
-    q: "Co je 'pérování' vozidla?",
-    answer: ["zařízení", "k pružnému zachycování nárazů", "vznikajících při jízdě", "vlivem nerovností vozovky"],
-    distractors: ["k brzdění", "ke změně směru jízdy", "k přenosu hnacího momentu"]
-  },
-  {
-    q: "Co je 'náprava' vozidla?",
-    answer: ["část vozidla", "jíž jsou dvě protější kola", "zavěšena na nosné konstrukci vozidla"],
-    distractors: ["pohání přední kola", "brzdí zadní kola", "přenáší moment motoru"]
+    q: "Doplňte definici: Pérování vozidla je ...",
+    ordered: true,
+    answer: ["zařízení k pružnému zachycování nárazů vznikajících při jízdě vlivem nerovností vozovky"],
+    distractors: ["zařízení k brzdění vznikajícímu při jízdě", "zařízení k tlumení hluku při jízdě vlivem nerovností vozovky", "zařízení k přenosu hnacího momentu na kola vozidla"]
   },
   {
-    q: "Co je 'řízení' vozidla?",
-    answer: ["ústrojí", "kterým řidič", "udržuje nebo mění", "směr jízdy vozidla"],
-    distractors: ["brzdí vozidlo", "pohání kola", "tlumí vibrace", "přenáší točivý moment"]
+    q: "Doplňte definici: Náprava vozidla je ...",
+    ordered: true,
+    answer: ["část vozidla jíž jsou dvě protější kola zavěšena na nosné konstrukci vozidla nebo na nosných částech podvěsu"],
+    distractors: ["část vozidla která přenáší točivý moment motoru na kola", "část vozidla která brzdí přední nebo zadní kola vozidla", "část vozidla která řídí směr jízdy vozidla"]
   },
   {
-    q: "Co je 'nástavba' vozidla?",
-    answer: ["funkční účelová část", "speciálních vozidel", "nezahrnuje budku pro obsluhu"],
-    distractors: ["zavazadlový prostor", "karoserie vozidla", "obsahuje kabinu řidiče", "pohonná soustava"]
-  },
-  // ROZMĚRY A HMOTNOSTI
-  {
-    q: "Jak je definována 'výška vozidla'?",
-    answer: ["vzdálenost", "nejvyššího pevného bodu vozidla", "od základny"],
-    distractors: ["od vozovky k pneumatice", "od střechy k podlaze", "nejnižšího bodu", "od nápravy"]
+    q: "Doplňte definici: Řízení vozidla je ...",
+    ordered: true,
+    answer: ["ústrojí kterým řidič udržuje nebo mění směr jízdy vozidla"],
+    distractors: ["ústrojí kterým řidič brzdí nebo zrychluje vozidlo", "ústrojí kterým řidič přenáší točivý moment na kola", "ústrojí kterým řidič tlumí vibrace při jízdě"]
   },
   {
-    q: "Jak je definována 'světlá výška'?",
-    answer: ["vzdálenost", "nejnižšího bodu", "na podvozku vozidla", "od vozovky"],
-    distractors: ["nejvyššího bodu", "od základny", "od kola k rámu", "od pneumatiky k střeše"]
+    q: "Doplňte definici: Nástavba vozidla je ...",
+    ordered: true,
+    answer: ["funkční účelová část speciálních vozidel s veškerým příslušenstvím nezahrnuje budku pro obsluhu"],
+    distractors: ["zavazadlový prostor vozidla včetně kabiny řidiče", "karoserie vozidla včetně střechy a dveří", "pohonná soustava speciálních vozidel"]
   },
   {
-    q: "Co je 'provozní hmotnost' vozidla?",
-    answer: ["hmotnost", "nenaloženého vozidla", "s karoserií", "v pohotovostním stavu"],
-    distractors: ["největší povolená hmotnost", "hmotnost nákladu", "bez paliva a řidiče", "prázdného podvozku"]
+    q: "Doplňte definici: Brzdné zařízení je ...",
+    ordered: true,
+    answer: ["soubor brzdových soustav a zpomalovacích soustav jimiž je vozidlo opatřeno"],
+    distractors: ["soustava pro přenos hnacího momentu na kola vozidla", "soubor odpružení a tlumičů jimiž je vozidlo opatřeno", "systém odpružení kol a náprav vozidla"]
+  },
+
+  // ── ROZMĚRY VOZIDEL ──
+  {
+    q: "Doplňte definici: Výška vozidla je ...",
+    ordered: true,
+    answer: ["vzdálenost nejvyššího pevného bodu vozidla od základny"],
+    distractors: ["vzdálenost nejnižšího bodu podvozku od vozovky", "vzdálenost střechy od podlahy karoserie", "vzdálenost od pneumatiky k nejvyššímu bodu vozidla"]
+  },
+  {
+    q: "Doplňte definici: Světlá výška je ...",
+    ordered: true,
+    answer: ["vzdálenost nejnižšího bodu na podvozku vozidla od vozovky"],
+    distractors: ["vzdálenost nejvyššího pevného bodu vozidla od základny", "vzdálenost od kola k rámu vozidla", "vzdálenost od pneumatiky k střeše vozidla"]
+  },
+  {
+    q: "Doplňte definici: Rozvor náprav je ...",
+    ordered: true,
+    answer: ["vzdálenost kolmic spuštěných na vozovku ze středů dvou kol umístěných za sebou na téže straně vozidla"],
+    distractors: ["vzdálenost středů otisků pneumatik obou kol nápravy", "vzdálenost od přední nápravy k zadní nápravě v ose vozidla", "vzdálenost od předního nárazníku k zadnímu nárazníku"]
+  },
+  {
+    q: "Doplňte definici: Rozchod kol je ...",
+    ordered: true,
+    answer: ["vzdálenost středů otisků pneumatik obou kol nápravy"],
+    distractors: ["vzdálenost kolmic ze středů kol za sebou na téže straně", "vzdálenost vnějších okrajů pneumatik obou kol nápravy", "vzdálenost od levého do pravého ráfku kola"]
   },
   {
     q: "Jaká je největší povolená šířka vozidla kategorie M1?",
+    ordered: true,
     answer: ["2,50 m"],
     distractors: ["2,00 m", "2,20 m", "2,55 m", "3,00 m"]
   },
-  // RÁMY
   {
-    q: "Jakou hlavní funkci plní rám vozidla?",
-    answer: ["základní nosná část vozidla", "přenáší všechny síly", "slouží k upevnění skupin vozidla"],
-    distractors: ["chrání posádku při nehodě", "tvoří aerodynamický tvar", "přenáší točivý moment motoru"]
+    q: "Jaká je největší povolená výška vozidel obecně?",
+    ordered: true,
+    answer: ["4,00 m"],
+    distractors: ["3,50 m", "4,20 m", "3,80 m", "5,00 m"]
   },
   {
-    q: "Z čeho se skládá žebřinový rám?",
-    answer: ["ze dvou podélníků", "a z několika příček"],
-    distractors: ["jednoho středního nosníku", "a z bočních desek", "ze tří nosníků", "a z plošiny"]
-  },
-  {
-    q: "Jak je tvořen páteřový rám?",
-    answer: ["středním podélným nosníkem", "ke kterému se připevňuje", "pohonná soustava"],
-    distractors: ["dvěma podélníky", "bočními nosníky", "plošinou jako podlahou", "příčnými výztuhami"]
-  },
-  // KOLA A PNEUMATIKY
-  {
-    q: "Z čeho se skládá vozidlové kolo?",
-    answer: ["z diskového kola", "ráfku", "a pneumatiky"],
-    distractors: ["nápravy", "a ložiska", "brzdového kotouče", "a náboje"]
-  },
-  {
-    q: "Co je 'běhoun' pneumatiky?",
-    answer: ["vrstva pryže", "na vnějším obvodu pláště", "opatřená vzorkem", "přenáší síly mezi kolem a vozovkou"],
-    distractors: ["vnitřní gumová vrstva", "výztužný pás pod kostrou", "zesílená část patky", "těsnicí vrstva"]
-  },
-  {
-    q: "Co je 'patka' pneumatiky?",
-    answer: ["zesílená část pláště", "dosedá na ráfek", "umožňuje montáž a utěsnění pláště"],
-    distractors: ["vnější vrstva s vzorkem", "vnitřní těsnicí vrstva", "přenáší síly na vozovku", "chrání bočnici"]
-  },
-  // NÁPRAVY
-  {
-    q: "Jaký je účel nápravy vozidla?",
-    answer: ["nést tíhu vozidla", "přenášet hnací brzdné a boční síly", "umožnit odpružení vozidla"],
-    distractors: ["řídit směr jízdy", "přenášet točivý moment motoru", "tlumit vibrace karoserie"]
-  },
-  {
-    q: "Co je výhodou tuhé nápravy?",
-    answer: ["jednoduchá konstrukce", "dobrý přenos sil", "minimální ošetřování"],
-    distractors: ["malá neodpérovaná hmota", "nezávislé vykyvování kol", "nízký hluk při jízdě"]
-  },
-  {
-    q: "Co je nevýhodou tuhé nápravy?",
-    answer: ["značná neodpérovaná hmotnost", "větší prostor pro výkyv", "samovolné řízení na nerovné vozovce"],
-    distractors: ["složitá konstrukce", "vysoká cena výroby", "nezávislé vykyvování kol"]
-  },
-  {
-    q: "K čemu slouží Panhárdská tyč?",
-    answer: ["zabraňuje", "vzájemnému příčnému pohybu", "nápravy a vozidla"],
-    distractors: ["přenáší točivý moment", "tlumí svislé vibrace", "umožňuje rejd kol", "brzdí zadní nápravu"]
-  },
-  // KONCEPCE POHONU
-  {
-    q: "Jak je uspořádána klasická koncepce pohonu?",
-    answer: ["motor vpředu podélně", "kloubový hřídel", "pohon zadních kol"],
-    distractors: ["motor vzadu", "pohon předních kol", "motor příčně", "pohon všech kol"]
-  },
-  {
-    q: "Jak se chová vozidlo s předním pohonem?",
-    answer: ["je taženo vpřed", "vzniká nedotáčivost", "stabilní stav"],
-    distractors: ["je tlačeno vzadu", "vzniká přetáčivost", "labilní stav", "neutrální stav"]
-  },
-  {
-    q: "Proč se u pohonu všech kol používá mezinápravový diferenciál?",
-    answer: ["vyrovnává rozdíly", "otáček", "předních a zadních kol"],
-    distractors: ["přenáší brzdný moment", "blokuje kola při prokluzu", "řídí zadní nápravu", "snižuje otáčky"]
-  },
-  // ODPRUŽENÍ
-  {
-    q: "Jaký je účel odpružení vozidla?",
-    answer: ["zmírnit rázy karoserie", "od nerovností vozovky", "udržet kola ve styku s vozovkou"],
-    distractors: ["zvýšit rychlost vozidla", "přenášet točivý moment", "řídit směr jízdy", "brzdné síly"]
-  },
-  {
-    q: "Co je 'progresivita' pružiny?",
-    answer: ["změna tuhosti pružiny", "v závislosti", "na jejím zatížení"],
-    distractors: ["schopnost tlumit vibrace", "pevnost pružiny při lomu", "délka pružiny v klidu", "hmotnost pružiny"]
-  },
-  {
-    q: "Jaká je ideální frekvence kmitů karoserie pro pohodlí jízdy?",
-    answer: ["60 až 80 kmitů za minutu", "rytmus chůze"],
-    distractors: ["100 až 120 kmitů za minutu", "20 až 40 kmitů za minutu", "rytmus dýchání", "rytmus srdce"]
-  },
-  // LOŽISKOVÁ JEDNOTKA
-  {
-    q: "Jaký je hlavní rozdíl ložiskové jednotky 3. generace oproti 2. generaci?",
-    answer: ["příruba na vnitřním i vnějším kroužku", "použitelná pro poháněné", "i nepoháněné kolo"],
-    distractors: ["jen pro nepoháněné kolo", "zabudovaný stejnoběžný kloub", "dělený vnitřní kroužek", "jen pro hnací nápravy"]
-  },
-  {
-    q: "Co je specifické pro ložiskovou jednotku 4. generace?",
-    answer: ["ve vnitřním kroužku", "je zabudován", "stejnoběžný kloub"],
-    distractors: ["ve vnějším kroužku", "kardanový kloub", "dělený vnitřní kroužek", "příruba na ráfku"]
-  },
-  {
-    q: "Jaké jsou dvě základní úlohy uložení kola?",
-    answer: ["přenos sil působících ve stopě pneumatiky", "uložit kolo bez vůle", "pro přesné otáčení"],
-    distractors: ["řídit směr jízdy", "tlumit vibrace", "přenášet točivý moment motoru", "brzdit vozidlo"]
-  },
-  {
-    q: "Ložisková jednotka 2. generace – pro jaký typ kola ji lze použít?",
-    answer: ["pouze pro nepoháněné kolo", "odpadá seřizování ložiskové vůle"],
-    distractors: ["pouze pro poháněné kolo", "pro obě poháněné i nepoháněné", "nutné seřízení vůle", "pouze pro zadní nápravu"]
+    q: "Jaká je největší povolená délka jednotlivého vozidla (kromě autobusu a návěsu)?",
+    ordered: true,
+    answer: ["12,00 m"],
+    distractors: ["10,00 m", "13,50 m", "15,00 m", "18,00 m"]
   },
 
-  // ROZMĚRY VOZIDEL – DETAILY
+  // ── HMOTNOSTI ──
   {
-    q: "Jak je definována 'délka vozidla'?",
-    answer: ["vzdálenost dvou svislých rovin", "kolmých k podélné střední rovině", "dotýkajících se předního a zadního konce vozidla"],
-    distractors: ["vzdálenost přední a zadní nápravy", "od nárazníku k nárazníku bez SPZ", "nejvzdálenějších bodů karoserie svisle"]
+    q: "Doplňte definici: Provozní hmotnost vozidla je ...",
+    ordered: true,
+    answer: ["hmotnost nenaloženého vozidla s karoserií v pohotovostním stavu"],
+    distractors: ["největší hmotnost se kterou smí být vozidlo provozováno", "hmotnost vozidla daná jeho konstrukcí a hmotností nákladu", "hmotnost prázdného vozidla bez paliva a obsluhy"]
   },
   {
-    q: "Jak je definována 'šířka vozidla'?",
-    answer: ["vzdálenost dvou rovin", "rovnoběžných s podélnou svislou rovinou", "s výjimkou zpětných zrcátek"],
-    distractors: ["vzdálenost kol včetně pneumatik", "vzdálenost vnějších okrajů karoserie", "včetně zpětných zrcátek", "od levého do pravého kola"]
-  },
-  {
-    q: "Co je 'rozchod kol'?",
-    answer: ["vzdálenost středů otisků pneumatik", "obou kol nápravy"],
-    distractors: ["vzdálenost náprav", "vzdálenost vnějších okrajů pneumatik", "vzdálenost kol od vozovky", "vzdálenost disků kol"]
-  },
-  {
-    q: "Co je 'přední převis' vozidla?",
-    answer: ["vzdálenost od kolmice ze středu kola přední nápravy", "k nejvzdálenějšímu bodu přední části vozidla"],
-    distractors: ["vzdálenost přední nápravy od středu vozidla", "délka přední části kapoty", "vzdálenost od nárazníku k motoru", "přesah karoserie za přední kola"]
-  },
-  {
-    q: "Jaká je největší povolená délka kloubového dvoučlánkového autobusu?",
-    answer: ["18,00 m"],
-    distractors: ["15,00 m", "16,50 m", "20,00 m", "22,00 m"]
-  },
-  {
-    q: "Jaká je největší povolená délka soupravy tahače s návěsem?",
-    answer: ["16,50 m"],
-    distractors: ["18,75 m", "15,00 m", "22,00 m", "13,50 m"]
+    q: "Co obsahuje vozidlo v pohotovostním stavu? (označte vše správné)",
+    ordered: false,
+    answer: ["náplň chladicí kapaliny a oleje", "90 % paliva", "100 % ostatních náplní", "nářadí a náhradní kolo", "řidič 75 kg"],
+    distractors: ["prázdná nádrž", "50 % paliva", "bez řidiče", "plná nádrž 100 %"]
   },
 
-  // HMOTNOSTI – DETAILY
+  // ── RÁMY ──
   {
-    q: "Co je 'největší povolená hmotnost' vozidla?",
-    answer: ["největší hmotnost", "se kterou smí být vozidlo užíváno", "v provozu na pozemních komunikacích"],
-    distractors: ["hmotnost daná konstrukcí vozidla", "hmotnost prázdného vozidla", "hmotnost nákladu", "hmotnost určená výrobcem"]
+    q: "Doplňte definici: Rám vozidla je ...",
+    ordered: true,
+    answer: ["základní nosná část vozidla která přenáší všechny síly a slouží k upevnění skupin vozidla"],
+    distractors: ["ochranná část vozidla která chrání posádku při nehodě", "aerodynamická část vozidla která tvoří vnější tvar vozu", "pohonná část vozidla která přenáší točivý moment motoru"]
   },
   {
-    q: "Co je 'největší technicky přípustná hmotnost'?",
-    answer: ["největší hmotnost vozidla", "daná jeho konstrukcí", "a hmotností nákladu podle údajů výrobce"],
-    distractors: ["hmotnost povolená zákonem", "hmotnost v pohotovostním stavu", "hmotnost prázdného vozidla", "hmotnost s posádkou"]
+    q: "Doplňte definici: Žebřinový rám je ...",
+    ordered: true,
+    answer: ["rám tvořený ze dvou podélníků a z několika příček"],
+    distractors: ["rám tvořený středním podélným nosníkem", "rám vytvořený jako vyztužená plošina", "rám tvořený dvěma podélníky sbližujícími se uprostřed"]
   },
   {
-    q: "Co obsahuje vozidlo v pohotovostním stavu?",
-    answer: ["náplň chladicí kapaliny", "oleje, 90 % paliva", "100 % ostatních náplní", "nářadí, náhradní kolo a řidič 75 kg"],
-    distractors: ["prázdná nádrž", "50 % paliva", "bez řidiče", "bez náhradního kola"]
-  },
-
-  // RÁMY – DETAILY
-  {
-    q: "Jaký profil průřezu mají podélníky žebřinového rámu?",
-    answer: ["profil U", "nebo tenkostěnný obdélníkový profil", "postavený na výšku"],
-    distractors: ["profil L", "profil T", "kruhový průřez", "plný obdélníkový profil"]
+    q: "Doplňte definici: Páteřový rám je ...",
+    ordered: true,
+    answer: ["rám se středním podélným nosníkem ke kterému se připevňuje pohonná soustava"],
+    distractors: ["rám ze dvou podélníků a příček", "rám vytvořený jako vyztužená plošina zároveň jako podlaha", "rám jehož podélníky opisují obrys bočních stěn vozu"]
   },
   {
-    q: "Jaký je poměr výšky k šířce profilu podélníku žebřinového rámu?",
-    answer: ["h/b = 2,8 až 3,5"],
-    distractors: ["h/b = 1,0 až 1,5", "h/b = 4,0 až 5,0", "h/b = 0,5 až 1,0", "h/b = 5,0 až 6,0"]
+    q: "Doplňte definici: Plošinový rám je ...",
+    ordered: true,
+    answer: ["rám vytvořený jako vyztužená plošina která je zároveň podlahou vozidla"],
+    distractors: ["rám tvořený středním nosníkem s pohonnou soustavou", "rám ze dvou podélníků a příček", "rám jehož nosník je vpředu i vzadu rozvidlen"]
   },
   {
-    q: "Jaká je tloušťka plechu podélníků u osobních automobilů?",
-    answer: ["3 až 4 mm"],
-    distractors: ["1 až 2 mm", "5 až 7 mm", "8 až 10 mm", "0,5 až 1 mm"]
+    q: "Jak se dělí rámy podle torzní tuhosti? (označte obě)",
+    ordered: false,
+    answer: ["torzně pružné rámy", "torzně tuhé rámy"],
+    distractors: ["svařované rámy", "nýtované rámy", "žebřinové rámy", "celistvé rámy"]
   },
   {
-    q: "Co je 'úhlopříčkový rám'?",
-    answer: ["rám ze dvou podélníků", "z několika příček", "a dvojice úhlopříček ve střední části"],
-    distractors: ["rám s jedním středním nosníkem", "rám z plošiny jako podlahy", "rám bez příček", "rám s páteřovým nosníkem"]
-  },
-  {
-    q: "Co je 'obvodový rám'?",
-    answer: ["rám ze dvou podélníků", "které opisují obrys bočních stěn vozu", "a několika příčkami"],
-    distractors: ["rám s jedním nosníkem uprostřed", "rám z plošiny", "rám bez podélníků", "rám s diagonálami"]
-  },
-  {
-    q: "Co je 'plošinový rám'?",
-    answer: ["rám vytvořený jako vyztužená plošina", "která je zároveň podlahou vozidla"],
-    distractors: ["rám ze dvou podélníků a příček", "rám se středním nosníkem", "rám s bočními nosníky", "rám pouze z příček"]
-  },
-  {
-    q: "Proč se nýtované rámy nesmí svařovat při opravě?",
-    answer: ["jsou z těžce svařitelných ocelí", "svařením by se změnily mechanické vlastnosti materiálu"],
-    distractors: ["jsou příliš tenké", "svařování je dražší než nýtování", "svařením vzniká koroze", "jsou z hliníku"]
+    q: "Jak se dělí rámy podle spojení prvků? (označte všechny tři)",
+    ordered: false,
+    answer: ["svařované rámy", "nýtované rámy", "šroubované rámy"],
+    distractors: ["torzně pružné rámy", "žebřinové rámy", "plošinové rámy", "lepené rámy"]
   },
 
-  // KOLA A DISKY – DETAILY
+  // ── KOLA A DISKY ──
   {
-    q: "Jak je disk kola nejčastěji spojen s ráfkem u lisovaného kola?",
-    answer: ["bodovým svařováním"],
-    distractors: ["šrouby a maticemi", "nýty", "lepením", "šroubovým spojem"]
+    q: "Doplňte definici: Vozidlové kolo se skládá z ...",
+    ordered: false,
+    answer: ["diskového kola", "ráfku", "pneumatiky"],
+    distractors: ["nápravy", "brzdového kotouče", "ložiska", "náboje kola"]
   },
   {
-    q: "Jaké jsou výhody odlévaných kol oproti lisovaným?",
-    answer: ["jsou lehčí", "přesně vyvážená", "ráfek i disk je jeden odlitek z lehkých slitin"],
-    distractors: ["jsou levnější", "vhodnější pro velkou výrobu", "mají větší pevnost", "jsou snáze opravitelné"]
+    q: "Jak se dělí disková kola podle technologie výroby? (označte obě)",
+    ordered: false,
+    answer: ["lisovaná", "odlévaná"],
+    distractors: ["kovaná", "svařovaná", "frézovaná", "3D tištěná"]
   },
   {
-    q: "Jaké tři funkce musí plnit spojení diskového kola s hlavou kola?",
-    answer: ["přenos točivého a brzdného momentu", "středění upevnění kola", "snadná výměna při poškození pneumatiky"],
-    distractors: ["přenos svislých sil", "tlumení vibrací", "vedení při rejdu", "zajištění polohy diferenciálu"]
+    q: "Doplňte definici: Prohloubení ráfku je ...",
+    ordered: true,
+    answer: ["část ráfku která umožňuje montáž pneumatiky na nedělený ráfek"],
+    distractors: ["část ráfku která snižuje celkovou hmotnost kola", "část ráfku která zabraňuje svléknutí pneumatiky za jízdy", "část ráfku pro odvod tepla od brzd"]
   },
   {
-    q: "Jak se přenáší točivý moment mezi diskem kola a hlavou kola?",
-    answer: ["třením mezi hlavou kola a náhlavím disku", "upevňovací šrouby nejsou namáhány na střih"],
-    distractors: ["přes drážkování šroubů", "přes střih šroubů", "přes klínový spoj", "přes pero a drážku"]
-  },
-  {
-    q: "K čemu slouží 'prohloubení ráfku'?",
-    answer: ["umožňuje montáž pneumatiky", "na nedělený ráfek"],
-    distractors: ["snižuje hmotnost ráfku", "zabraňuje svléknutí pneumatiky", "odvádí teplo od brzd", "upevňuje disk kola"]
-  },
-  {
-    q: "Co jsou 'opěrné plochy' ráfku?",
-    answer: ["boční dorazy pro patky pneumatiky"],
-    distractors: ["dosedací plochy pro disk kola", "plochy pro kontakt s vozovkou", "místa pro šrouby kola", "plochy pro vyvažovací závaží"]
+    q: "Doplňte definici: Zális (ET) disku kola je ...",
+    ordered: true,
+    answer: ["vzdálenost mezi pomyslným středem disku a místem kde dosedne na nápravu vozidla"],
+    distractors: ["průměr středového otvoru disku kola v mm", "šířka ráfku měřená v palcích", "vzdálenost mezi otvory pro kolové šrouby"]
   },
 
-  // PNEUMATIKY – DETAILY
+  // ── PNEUMATIKY ──
   {
-    q: "Co je 'plášť' pneumatiky?",
-    answer: ["pružná vnější část pneumatiky", "zajišťuje styk kola s vozovkou", "patkou dosedá na ráfek"],
-    distractors: ["vnitřní těsnicí vrstva", "výztužný pás pod běhounem", "zesílená část patky", "kostra z kordových vložek"]
+    q: "Doplňte definici: Pneumatika je ...",
+    ordered: true,
+    answer: ["souhrnný název pro plášť duši a ochrannou vložku namontované na ráfek a naplněné tlakovým vzduchem"],
+    distractors: ["souhrnný název pro plášť a ráfek kola naplněné tlakovým plynem", "souhrnný název pro běhoun kostru a patku pneumatiky", "souhrnný název pro disk ráfek a vzduchový vak kola"]
   },
   {
-    q: "Z jakého materiálu je butylový kaučuk vnitřní gumy?",
-    answer: ["syntetický kaučuk", "s nízkou propustností pro vzduch"],
-    distractors: ["přírodní kaučuk", "pogumovaná ocelová vlákna", "nylonový kord", "polyuretanová pěna"]
+    q: "Doplňte definici: Plášť pneumatiky je ...",
+    ordered: true,
+    answer: ["pružná vnější část pneumatiky která zajišťuje styk kola s vozovkou a patkou dosedá na ráfek"],
+    distractors: ["vnitřní část pneumatiky která zabraňuje úniku vzduchu z kola", "výztužný pás pod běhounem tvořící přechod ke kostře", "zesílená část pláště dosedající na ráfek umožňující montáž"]
   },
   {
-    q: "Co tvoří patní lano pneumatiky?",
-    answer: ["pogumovaný svazek ocelových drátů"],
-    distractors: ["polyamidová vlákna", "skleněná vlákna", "syntetický kaučuk", "nylonový kord"]
+    q: "Doplňte definici: Běhoun pneumatiky je ...",
+    ordered: true,
+    answer: ["vrstva pryže na vnějším obvodu pláště opatřená vzorkem jejíž hlavní funkcí je přenášet síly mezi kolem a vozovkou"],
+    distractors: ["vnitřní vrstva pryže zabraňující úniku vzduchu z pneumatiky", "výztužný pás tvořící přechod mezi běhounem a kostrou pláště", "zesílená část pláště dosedající na ráfek kola"]
   },
   {
-    q: "Jak se dělí pneumatiky podle vzorku dezénu?",
+    q: "Doplňte definici: Patka pneumatiky je ...",
+    ordered: true,
+    answer: ["zesílená část pláště která dosedá na ráfek a umožňuje montáž pneumatiky a utěsnění pláště na ráfku"],
+    distractors: ["pružná vnější část pneumatiky zajišťující styk kola s vozovkou", "vnitřní vrstva zabraňující úniku vzduchu z bezdušové pneumatiky", "výztužný pás tvořící přechod mezi běhounem a kostrou pláště"]
+  },
+  {
+    q: "Jak se dělí pneumatiky podle vzorku dezénu? (označte všechny tři)",
+    ordered: false,
     answer: ["silniční", "univerzální", "terénní"],
-    distractors: ["diagonální", "radiální", "semiradiální", "s duší", "bezdušové"]
+    distractors: ["diagonální", "radiální", "tubeless", "s duší"]
   },
   {
-    q: "Jak se dělí pneumatiky podle huštění?",
-    answer: ["stálé huštění", "proměnlivé huštění"],
-    distractors: ["přetlakové", "podtlakové", "tubeless", "tube type"]
+    q: "Jak se dělí pneumatiky podle konstrukce kostry? (označte čtyři základní)",
+    ordered: false,
+    answer: ["diagonální", "radiální", "semiradiální", "speciální"],
+    distractors: ["silniční", "terénní", "s duší", "bezdušové", "letní", "zimní"]
   },
   {
-    q: "Jaký úhel svírají kordové nitě s obvodovou kružnicí u diagonální pneumatiky?",
+    q: "Jaký úhel svírají kordové nitě u diagonální pneumatiky s obvodovou kružnicí?",
+    ordered: true,
     answer: ["30 až 40 stupňů"],
     distractors: ["0 až 10 stupňů", "15 až 25 stupňů", "45 až 60 stupňů", "90 stupňů"]
   },
 
-  // NÁPRAVY – DETAILY
+  // ── NÁPRAVY ──
   {
-    q: "Co je 'nápravnice'?",
-    answer: ["tuhá náprava tvořená plným profilovým nosníkem", "slouží pouze jako nosná", "případně jako řídící náprava"],
-    distractors: ["hnací hřídel nápravy", "část páteřového rámu", "kloub pro přenos momentu", "výkyvná polonáprava"]
+    q: "Jaký je trojí účel nápravy vozidla? (označte všechny tři)",
+    ordered: false,
+    answer: ["nést tíhu vozidla a přenášet ji na kola", "přenášet hnací brzdné a boční síly mezi koly a rámem", "umožnit odpružení vozidla pomocí pružin"],
+    distractors: ["řídit směr jízdy vozidla", "přenášet točivý moment motoru na kola", "tlumit vibrace karoserie při jízdě"]
   },
   {
-    q: "Co je 'mostová náprava'?",
-    answer: ["tuhá hnací náprava", "tvořená mostovými rourami", "s uloženými hnacími hřídeli a rozvodovkou"],
-    distractors: ["výkyvná náprava", "náprava bez pohonu", "náprava McPherson", "přední řídící náprava"]
+    q: "Doplňte definici: Nápravnice je ...",
+    ordered: true,
+    answer: ["tuhá náprava tvořená plným profilovým nosníkem která slouží pouze jako nosná případně jako řídící náprava"],
+    distractors: ["tuhá hnací náprava tvořená mostovými rourami s uloženými hnacími hřídeli", "výkyvná náprava jejíž kola jsou zavěšena samostatně na polonápravách", "náprava s víceprvkovým závěsem kde každé kolo má vlastní ramena"]
   },
   {
-    q: "K čemu slouží Wattův přímovod?",
-    answer: ["zajišťuje", "že kola budou při průjezdu zatáčkou", "neustále kolmá k vozovce"],
-    distractors: ["přenáší točivý moment", "umožňuje rejd kol", "tlumí svislé vibrace", "brzdí zadní nápravu"]
+    q: "Doplňte definici: Mostová náprava je ...",
+    ordered: true,
+    answer: ["tuhá hnací náprava tvořená mostovými rourami ve kterých jsou uloženy hnací hřídele a rozvodovka"],
+    distractors: ["výkyvná náprava tvořená kyvadlovými rameny s diferenciálem", "nápravnice tvořená plným profilovým nosníkem bez pohonu", "náprava McPherson s posuvnou vzpěrou nahrazující horní rameno"]
   },
   {
-    q: "Jaká je výhoda výkyvných náprav oproti tuhým?",
-    answer: ["podstatně menší neodpérovaná hmota", "kola se mohou vykyvovat nezávisle na sobě"],
-    distractors: ["jednodušší konstrukce", "lepší přenos hnacího momentu", "levnější výroba", "menší zástavbový prostor"]
+    q: "Doplňte definici: Panhárdská tyč je ...",
+    ordered: true,
+    answer: ["tyč upevněná jedním koncem otočně na nápravě a druhým na rámu která zabraňuje vzájemnému příčnému pohybu nápravy a vozidla"],
+    distractors: ["tyč přenášející točivý moment od motoru k zadní nápravě", "tyč spojující přední a zadní nápravu pro přenos brzdných sil", "tyč umožňující natáčení kol do rejdu při průjezdu zatáčkou"]
   },
   {
-    q: "Co je náprava McPherson?",
-    answer: ["horní rameno je nahrazeno posuvnou vzpěrou", "slučuje odpružení tlumení a natáčení kol do rejdu", "uvolňuje prostor pro motor"],
-    distractors: ["dvě stejně dlouhá ramena", "tři příčná ramena pro každé kolo", "tuhé spojení obou kol", "páteřová náprava se středním nosníkem"]
+    q: "Doplňte definici: Náprava De-Dion je ...",
+    ordered: true,
+    answer: ["náprava kde je skříň rozvodovky oddělena od nápravy a zavěšena na rám kola jsou spojena nápravnicí a neodpérovaná hmota je menší"],
+    distractors: ["výkyvná náprava kde každé kolo je zavěšeno na samostatném rameni kolem společného středu", "tuhá náprava s rozvodovkou přímo na nápravě a dvěma mostovými rourami", "náprava McPherson kde horní rameno je nahrazeno posuvnou vzpěrou"]
   },
   {
-    q: "Co je 'náprava De-Dion'?",
-    answer: ["skříň rozvodovky oddělena od nápravy a zavěšena na rám", "kola spojena nápravnicí", "snižuje neodpérovanou hmotnost"],
-    distractors: ["rozvodovka přímo na nápravě", "výkyvná náprava bez nápravnice", "náprava bez diferenciálu", "náprava s páteřovým nosníkem"]
+    q: "Doplňte definici: Náprava McPherson je ...",
+    ordered: true,
+    answer: ["náprava kde horní rameno je nahrazeno posuvnou vzpěrou která slučuje odpružení tlumení a natáčení kol do rejdu"],
+    distractors: ["náprava kde obě ramena jsou stejně dlouhá a kola se vykyvují kolem společného středu", "náprava kde každé kolo je zavěšeno na dvou nestejně dlouhých příčných ramenech", "náprava tvořená plným profilovým nosníkem bez pohonu"]
   },
   {
-    q: "Co je lichoběžníková náprava?",
-    answer: ["kola zavěšena na dvou nestejně dlouhých příčných ramenech", "horní rameno je kratší"],
-    distractors: ["kola zavěšena na jednom rameni", "obě ramena stejně dlouhá", "náprava s podélnými rameny", "tuhé spojení obou kol"]
-  },
-
-  // KAROSERIE
-  {
-    q: "Co je karoserie typu 'kombi'?",
-    answer: ["dvouprostorová karoserie", "se zvětšeným zavazadlovým prostorem", "spojeným s prostorem pro cestující"],
-    distractors: ["tříprostorová karoserie", "karoserie se svislou zadní stěnou", "karoserie bez střechy", "karoserie s výklopnou střechou"]
+    q: "Jaké jsou výhody tuhé nápravy? (označte tři správné)",
+    ordered: false,
+    answer: ["jednoduchá konstrukce a levná výroba", "dobrý přenos sil a spolehlivé vedení kol", "minimální ošetřování"],
+    distractors: ["malá neodpérovaná hmotnost", "nezávislé vykyvování kol", "nízký hluk při jízdě", "vhodná jako přední řídící náprava OA"]
   },
   {
-    q: "Co je karoserie typu 'kupé'?",
-    answer: ["dvoudveřová karoserie", "se skloněnou zádí", "zpravidla pro dva cestující"],
-    distractors: ["čtyřdveřová karoserie", "karoserie s výklopnou střechou", "tříprostorová karoserie", "karoserie bez střechy"]
-  },
-  {
-    q: "Co je 'samonosná karoserie'?",
-    answer: ["karoserie která zároveň plní funkci rámu", "přenáší všechny síly působící na vozidlo"],
-    distractors: ["karoserie upevněná na samostatný rám", "karoserie z hliníkových profilů", "karoserie z plastů", "karoserie s páteřovým rámem"]
+    q: "Jaké jsou nevýhody tuhé nápravy? (označte tři správné)",
+    ordered: false,
+    answer: ["značná neodpérovaná hmotnost nápravy", "větší potřebný prostor pro výkyv celé nápravy", "samovolné řízení nápravy na nerovné vozovce"],
+    distractors: ["složitá konstrukce", "vysoká cena výroby", "špatný přenos brzdných sil", "nezávislé vykyvování kol"]
   },
 
-  // ODPRUŽENÍ – DETAILY
+  // ── LOŽISKOVÁ JEDNOTKA ──
   {
-    q: "Co je 'samotlumící účinek' pružiny?",
-    answer: ["schopnost pružiny", "tlumit vlastní kmitání"],
-    distractors: ["schopnost tlumit kmitání karoserie", "pevnost pružiny v tahu", "délka pružiny při zatížení", "progresivita tuhosti"]
+    q: "Doplňte charakteristiku ložiskové jednotky 1. generace:",
+    ordered: true,
+    answer: ["jedno radiální ložisko s děleným vnitřním kroužkem nutné seřízení ložiskové vůle"],
+    distractors: ["vnější kroužek má přírubu lze použít pouze pro nepoháněné kolo", "příruba na vnitřním i vnějším kroužku použitelná pro poháněné i nepoháněné kolo", "ve vnitřním kroužku zabudovaný stejnoběžný kloub"]
   },
   {
-    q: "Co způsobuje příliš nízká frekvence kmitů karoserie?",
-    answer: ["houpání", "mořská nemoc"],
-    distractors: ["rychlé otřesy", "svalová únava", "ztrátu adheze kol", "hluk při jízdě"]
+    q: "Doplňte charakteristiku ložiskové jednotky 2. generace:",
+    ordered: true,
+    answer: ["vnější kroužek má přírubu k upevnění kola lze použít pouze pro nepoháněné kolo odpadá seřizování ložiskové vůle"],
+    distractors: ["jedno radiální ložisko s děleným vnitřním kroužkem nutné seřízení vůle", "příruba na vnitřním i vnějším kroužku použitelná pro poháněné i nepoháněné kolo", "ve vnitřním kroužku zabudovaný stejnoběžný kloub"]
   },
   {
-    q: "Kde je odpružení umístěno na vozidle?",
-    answer: ["mezi nápravami", "a rámem vozidla", "nebo samonosnou karoserií"],
-    distractors: ["uvnitř pneumatiky", "na hnacím hřídeli", "na ráfcích kol", "uvnitř motoru"]
+    q: "Doplňte charakteristiku ložiskové jednotky 3. generace:",
+    ordered: true,
+    answer: ["příruba na vnitřním i vnějším kroužku použitelná pro poháněné i nepoháněné kolo celý vnitřní díl působí jako náboj kola"],
+    distractors: ["vnější kroužek má přírubu lze použít pouze pro nepoháněné kolo", "ve vnitřním kroužku zabudovaný stejnoběžný kloub", "jedno radiální ložisko s děleným vnitřním kroužkem nutné seřízení vůle"]
   },
   {
-    q: "Co se stane když kolo ztratí kontakt s vozovkou?",
-    answer: ["nemohou se přenášet žádné síly", "tažné suvné ani brzdné", "řidič ztrácí možnost vozidlo ovládat"],
-    distractors: ["aktivuje se ABS", "vozidlo automaticky zabrzdí", "zapne se pohon všech kol", "zvýší se opotřebení pneumatiky"]
+    q: "Co je specifické pro ložiskovou jednotku 4. generace?",
+    ordered: true,
+    answer: ["ve vnitřním kroužku ložiska je zabudován stejnoběžný kloub"],
+    distractors: ["vnější kroužek má přírubu k upevnění pouze pro nepoháněné kolo", "příruba na obou kroužcích pro poháněná i nepoháněná kola", "dělený vnitřní kroužek pro snadnější montáž ložiska"]
   },
 
-  // KONCEPCE POHONU – DETAILY
+  // ── KONCEPCE POHONU ──
   {
-    q: "Jaká je výhoda předního pohonu týkající se podlahy karoserie?",
-    answer: ["hladká podlaha karoserie", "odpadá tunel pro kloubový hřídel"],
-    distractors: ["nižší podlaha", "pevnější podlaha", "kratší výfukové potrubí", "větší světlá výška"]
+    q: "Doplňte definici základní koncepce automobilu:",
+    ordered: true,
+    answer: ["umístění hnacího ústrojí motoru spojky převodovky a rozvodovky vzhledem k nápravám automobilu"],
+    distractors: ["umístění karoserie a podvozku vzhledem k nápravám automobilu", "umístění motoru a výfukového systému vzhledem k posádce", "uspořádání brzdového a odpružovacího systému vůči nápravám"]
   },
   {
-    q: "Jaká je nevýhoda předního pohonu při jízdě do svahu a akceleraci?",
-    answer: ["odlehčení přední hnací nápravy", "snížení přenosu hnacích sil"],
-    distractors: ["přetáčivost vozidla", "nestejné opotřebení zadních pneumatik", "přehřívání motoru", "složité brzdění"]
+    q: "Doplňte charakteristiku klasické koncepce pohonu:",
+    ordered: true,
+    answer: ["motor vpředu podélně spojovací kloubový hřídel pohání zadní kola přes rozvodovku"],
+    distractors: ["motor vpředu příčně celá pohonná soustava vpředu pohání přední kola", "motor vzadu pohonná soustava vzadu pohání zadní kola", "motor vpředu pohonná soustava uprostřed pohání všechna kola"]
   },
   {
-    q: "Co je pohon Transaxle?",
-    answer: ["motor a spojka vpředu", "převodovka a rozvodovka na zadní poháněné nápravě", "větší zatížení zadní hnací nápravy"],
-    distractors: ["motor vzadu a pohon předních kol", "motor uprostřed s pohonem všech kol", "motor příčně vzadu", "celá soustava vpředu"]
+    q: "Doplňte charakteristiku předního pohonu:",
+    ordered: true,
+    answer: ["veškerá pohonná soustava je vpředu vozidlo je taženo přední nápravou vzniká nedotáčivost"],
+    distractors: ["veškerá pohonná soustava je vzadu vozidlo je tlačeno zadní nápravou vzniká přetáčivost", "motor je vpředu pohon přes kloubový hřídel na zadní nápravu", "pohon přes mezinápravový diferenciál na obě nápravy"]
   },
   {
-    q: "Proč se pohon všech kol zpočátku nepoužíval u osobních automobilů?",
-    answer: ["vozidla měla nízký výkon motoru", "pohon jedné nápravy plně dostačoval", "ekonomické a prostorové důvody"],
-    distractors: ["technologie nebyla dostupná", "pneumatiky nebyly vhodné", "zákazníci neměli zájem", "byl příliš těžký"]
+    q: "Proč pohon všech kol vyžaduje mezinápravový diferenciál?",
+    ordered: true,
+    answer: ["vyrovnává rozdíly otáček předních a zadních kol při průjezdu zatáčkou"],
+    distractors: ["přenáší brzdný moment rovnoměrně na všechna čtyři kola", "blokuje prokluzu kol při jízdě v terénu", "řídí zadní nápravu při průjezdu zatáčkou"]
+  },
+
+  // ── ODPRUŽENÍ ──
+  {
+    q: "Doplňte trojí účel odpružení vozidla: (označte všechny tři)",
+    ordered: false,
+    answer: ["zmírnit rázy a otřesy karoserie od nerovností vozovky", "zmenšit namáhání rámu zejména krutem", "udržet kola pokud možno ve stálém styku s vozovkou"],
+    distractors: ["zvýšit rychlost vozidla", "přenášet točivý moment", "řídit směr jízdy", "brzdit vozidlo"]
+  },
+  {
+    q: "Doplňte definici: Progresivita pružiny je ...",
+    ordered: true,
+    answer: ["změna tuhosti pružiny v závislosti na jejím zatížení"],
+    distractors: ["schopnost pružiny tlumit vlastní kmitání bez tlumičů", "počet kmitů pružiny za minutu po rozkmitání", "pevnost pružiny při maximálním dovoleném zatížení"]
+  },
+  {
+    q: "Doplňte definici: Samotlumící účinek pružiny je ...",
+    ordered: true,
+    answer: ["schopnost pružiny tlumit vlastní kmitání"],
+    distractors: ["schopnost pružiny měnit tuhost v závislosti na zatížení", "počet kmitů pružiny za minutu po rozkmitání", "odolnost pružiny vůči únavovému lomu při opakovaném zatížení"]
+  },
+  {
+    q: "Jaká je ideální frekvence kmitů karoserie pro pohodlí jízdy?",
+    ordered: true,
+    answer: ["60 až 80 kmitů za minutu"],
+    distractors: ["20 až 40 kmitů za minutu", "100 až 120 kmitů za minutu", "150 až 200 kmitů za minutu", "10 až 20 kmitů za minutu"]
+  },
+  {
+    q: "Co způsobuje nízká frekvence kmitů karoserie (pod 60 kmitů/min)?",
+    ordered: true,
+    answer: ["houpání vozidla mořská nemoc"],
+    distractors: ["rychlé otřesy a nervová únava", "ztrátu adheze kol s vozovkou", "hluk při jízdě po nerovném povrchu"]
   },
 ];
 
@@ -635,6 +573,12 @@ function showQuestion(){
   document.getElementById('next-btn').textContent='Zkontrolovat →';
   document.getElementById('answer-zone').innerHTML='';
   document.getElementById('answer-zone').className='answer-zone';
+
+  // Show hint whether order matters
+  const isOrdered = q.ordered !== false;
+  document.getElementById('answer-zone-label').innerHTML = isOrdered
+    ? 'Vaše odpověď — <strong style="color:#ffd080">pořadí záleží</strong> — klikněte nebo přetáhněte slova sem:'
+    : 'Vaše odpověď — <strong style="color:#7df0c6">pořadí nezáleží</strong> — klikněte nebo přetáhněte slova sem:';
 
   // Build shuffled word pool
   const allWords = shuffle([...q.answer, ...(q.distractors||[])]);
@@ -726,13 +670,29 @@ function evaluateAnswer(){
   const zone = document.getElementById('answer-zone');
   const bank = document.getElementById('word-bank');
   const placed = [...zone.querySelectorAll('.chip')].map(c=>c.dataset.word);
-  const isCorrect = JSON.stringify(placed) === JSON.stringify(q.answer);
+
+  // ordered=true (default) → pořadí záleží; ordered=false → jen obsah
+  const isOrdered = q.ordered !== false;
+  let isCorrect;
+  if(isOrdered){
+    isCorrect = JSON.stringify(placed) === JSON.stringify(q.answer);
+  } else {
+    const placedSorted = [...placed].sort();
+    const answerSorted = [...q.answer].sort();
+    isCorrect = JSON.stringify(placedSorted) === JSON.stringify(answerSorted);
+  }
 
   // Style chips
   zone.querySelectorAll('.chip').forEach(c=>{
     c.draggable=false;
-    c.className = q.answer.includes(c.dataset.word) && placed.indexOf(c.dataset.word) === q.answer.indexOf(c.dataset.word)
-      ? 'chip chip-correct' : 'chip chip-wrong';
+    const word = c.dataset.word;
+    const inAnswer = q.answer.includes(word);
+    if(isOrdered){
+      const posOk = placed.indexOf(word) === q.answer.indexOf(word);
+      c.className = (inAnswer && posOk) ? 'chip chip-correct' : 'chip chip-wrong';
+    } else {
+      c.className = inAnswer ? 'chip chip-correct' : 'chip chip-wrong';
+    }
   });
   bank.querySelectorAll('.chip').forEach(c=>{ c.draggable=false; c.style.opacity='.4'; });
 
@@ -746,12 +706,11 @@ function evaluateAnswer(){
     wrong++;
     zone.classList.add('wrong');
     fb.className='feedback wrong';
-    const correctHtml = q.answer.map(w=>`<span class="chip chip-correct-answer" style="display:inline-flex;margin:2px 3px;padding:3px 8px;border-radius:6px;font-size:13px">${w}</span>`).join('');
-    fb.innerHTML=`✗ Špatně.<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br>${correctHtml}`;
+    const sep = isOrdered ? ' ' : ' · ';
+    const correctHtml = q.answer.map(w=>`<span class="chip chip-correct-answer" style="display:inline-flex;margin:2px 3px;padding:3px 8px;border-radius:6px;font-size:13px">${w}</span>`).join(isOrdered ? '' : '<span style="color:rgba(255,255,255,0.3);margin:0 2px">·</span>');
+    fb.innerHTML=`✗ Špatně.<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br><div style="margin-top:4px">${correctHtml}</div>`;
   }
   fb.style.display='block';
-
-  // Change button to "Next"
   const btn = document.getElementById('next-btn');
   btn.textContent = current+1 >= Q_PER_ROUND ? 'Zobrazit výsledek →' : 'Další otázka →';
 }
@@ -768,7 +727,7 @@ function timeUp(){
   const fb = document.getElementById('feedback');
   const correctHtml = q.answer.map(w=>`<span class="chip chip-correct-answer" style="display:inline-flex;margin:2px 3px;padding:3px 8px;border-radius:6px;font-size:13px">${w}</span>`).join('');
   fb.className='feedback wrong';
-  fb.innerHTML=`⏱ Čas vypršel!<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br>${correctHtml}`;
+  fb.innerHTML=`⏱ Čas vypršel!<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br><div style="margin-top:4px">${correctHtml}</div>`;
   fb.style.display='block';
   const btn = document.getElementById('next-btn');
   btn.textContent = current+1 >= Q_PER_ROUND ? 'Zobrazit výsledek →' : 'Další otázka →';
