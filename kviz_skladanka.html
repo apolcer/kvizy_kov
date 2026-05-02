@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Závěrečný test – Konstrukce vozidel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--purple:#534AB7;--purple-dark:#3C3489;--green:#1D9E75;--red:#E24B4A;--bg:#1a1a2e;--card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.12)}
+body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;color:#fff}
+.container{width:100%;max-width:720px}
+
+/* START */
+#start-screen{text-align:center;padding:3rem 2rem;background:var(--card);border-radius:20px;border:1px solid var(--border)}
+.logo{font-size:52px;margin-bottom:1rem}
+#start-screen h1{font-size:28px;font-weight:900;margin-bottom:.4rem}
+#start-screen p{font-size:15px;color:rgba(255,255,255,0.6);margin-bottom:.6rem}
+.pills{margin-bottom:2rem}
+.pill{display:inline-block;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 14px;font-size:13px;margin:3px;color:rgba(255,255,255,0.8)}
+.start-btn{padding:1rem 3rem;background:var(--purple);color:#fff;font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 20px rgba(83,74,183,0.5);transition:background .15s,transform .1s}
+.start-btn:hover{background:var(--purple-dark);transform:translateY(-2px)}
+
+/* QUIZ */
+#quiz-screen{display:none}
+.progress-bar{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;margin-bottom:1.2rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--purple);border-radius:3px;transition:width .4s}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.q-num{font-size:14px;font-weight:700;color:rgba(255,255,255,0.6)}
+
+/* Timer */
+.timer-wrap{position:relative;width:52px;height:52px}
+.timer-svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.timer-track{fill:none;stroke:rgba(255,255,255,0.1);stroke-width:4}
+.timer-fill{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-dasharray:125.6;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .3s}
+.timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900}
+
+/* Question */
+.question-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem 1.6rem;margin-bottom:1.2rem}
+.q-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.q-text{font-size:18px;font-weight:700;line-height:1.5;color:#fff}
+.q-img{margin-top:.75rem;max-height:180px;width:100%;object-fit:contain;border-radius:8px}
+
+/* Answer zone */
+.answer-zone-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.answer-zone{min-height:56px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.2);border-radius:12px;padding:.6rem .8rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-bottom:1.2rem;transition:border-color .2s}
+.answer-zone.drag-over{border-color:var(--purple);background:rgba(83,74,183,0.1)}
+.answer-zone.correct{border-color:var(--green);background:rgba(29,158,117,0.12)}
+.answer-zone.wrong{border-color:var(--red);background:rgba(226,75,74,0.12)}
+
+/* Word chips */
+.chip{display:inline-flex;align-items:center;padding:.35rem .75rem;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;user-select:none;transition:transform .1s,opacity .1s;border:2px solid transparent;white-space:nowrap}
+.chip-bank{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);color:#fff}
+.chip-bank:hover{background:rgba(255,255,255,0.18);transform:translateY(-2px)}
+.chip-placed{background:rgba(83,74,183,0.5);border-color:rgba(83,74,183,0.8);color:#fff}
+.chip-placed:hover{background:rgba(83,74,183,0.4)}
+.chip-correct{background:rgba(29,158,117,0.4);border-color:var(--green);color:#b8ffea;cursor:default}
+.chip-wrong{background:rgba(226,75,74,0.35);border-color:var(--red);color:#ffbbbb;cursor:default}
+.chip-correct-answer{background:rgba(29,158,117,0.25);border-color:var(--green);border-style:dashed;color:#b8ffea;cursor:default}
+.chip.dragging{opacity:.4;transform:scale(.95)}
+
+/* Word bank */
+.word-bank-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.word-bank{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.2rem;min-height:44px}
+
+/* Feedback */
+.feedback{padding:.8rem 1.2rem;border-radius:12px;font-size:14px;font-weight:700;margin-bottom:.8rem;display:none}
+.feedback.correct{background:rgba(29,158,117,0.2);border:1px solid var(--green);color:#7df0c6}
+.feedback.wrong{background:rgba(226,75,74,0.15);border:1px solid var(--red);color:#ffaaaa}
+
+/* Correct answer display */
+.correct-answer-display{font-size:13px;color:rgba(255,255,255,0.55);margin-top:.4rem}
+.correct-answer-display strong{color:rgba(255,255,255,0.85)}
+
+.next-btn{width:100%;padding:.85rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;display:none;transition:background .15s}
+.next-btn:hover{background:rgba(255,255,255,0.18)}
+
+/* RESULT */
+#result-screen{display:none;text-align:center;padding:2.5rem 2rem;background:var(--card);border-radius:20px;border:1px solid var(--border)}
+.result-emoji{font-size:56px;margin-bottom:.5rem}
+#result-screen h2{font-size:26px;font-weight:900;margin-bottom:.5rem}
+.score-pct{font-size:72px;font-weight:900;color:var(--purple);line-height:1;margin:.5rem 0}
+.score-pct span{font-size:36px}
+.score-msg{font-size:16px;color:rgba(255,255,255,0.65);margin-bottom:1.5rem}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+.stat-card{background:rgba(255,255,255,0.07);border-radius:12px;padding:1rem}
+.stat-val{font-size:28px;font-weight:900}
+.stat-label{font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px}
+.stat-card.good .stat-val{color:#7df0c6}
+.stat-card.bad .stat-val{color:#ffaaaa}
+.grade-badge{display:inline-block;padding:.5rem 1.5rem;border-radius:50px;font-size:18px;font-weight:900;margin-bottom:1.5rem}
+.grade-1{background:rgba(29,158,117,0.3);border:2px solid var(--green);color:#7df0c6}
+.grade-2{background:rgba(83,74,183,0.3);border:2px solid var(--purple);color:#c0b8ff}
+.grade-3{background:rgba(255,180,0,0.2);border:2px solid #ffb400;color:#ffd566}
+.grade-4{background:rgba(226,75,74,0.2);border:2px solid var(--red);color:#ffaaaa}
+.restart-btn{padding:.9rem 2.5rem;background:var(--purple);color:#fff;font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 20px rgba(83,74,183,0.4);transition:background .15s,transform .1s}
+.restart-btn:hover{background:var(--purple-dark);transform:translateY(-2px)}
+
+@media(max-width:500px){.q-text{font-size:16px}.score-pct{font-size:56px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- START -->
+<div id="start-screen">
+  <div class="logo">📝</div>
+  <h1>Závěrečný test</h1>
+  <p>Konstrukce vozidel · 2. ročník · obor karosář</p>
+  <p style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:1rem">Sestavte správnou odpověď přetažením slov</p>
+  <div class="pills">
+    <span class="pill">📋 20 otázek</span>
+    <span class="pill">⏱ 90 sekund / otázka</span>
+    <span class="pill">🎯 slovní skládanka</span>
+  </div>
+  <button class="start-btn" onclick="startTest()">Zahájit test</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-screen">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="top-bar">
+    <span class="q-num" id="q-num">1 / 20</span>
+    <div class="timer-wrap">
+      <svg class="timer-svg" width="52" height="52" viewBox="0 0 52 52">
+        <circle class="timer-track" cx="26" cy="26" r="20"/>
+        <circle class="timer-fill" id="timer-ring" cx="26" cy="26" r="20"/>
+      </svg>
+      <div class="timer-num" id="timer-num">90</div>
+    </div>
+  </div>
+
+  <div class="question-card">
+    <div class="q-label">Otázka</div>
+    <div class="q-text" id="q-text"></div>
+    <img id="q-img" class="q-img" style="display:none" src="" alt="">
+  </div>
+
+  <div class="answer-zone-label">Vaše odpověď — klikněte nebo přetáhněte slova sem:</div>
+  <div class="answer-zone" id="answer-zone"></div>
+
+  <div class="word-bank-label">Dostupná slova:</div>
+  <div class="word-bank" id="word-bank"></div>
+
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">Další otázka →</button>
+</div>
+
+<!-- RESULT -->
+<div id="result-screen">
+  <div class="result-emoji" id="r-emoji">🏆</div>
+  <h2>Výsledek závěrečného testu</h2>
+  <div class="score-pct" id="r-pct">0<span>%</span></div>
+  <div class="grade-badge" id="r-grade">—</div>
+  <p class="score-msg" id="r-msg"></p>
+  <div class="stats-grid">
+    <div class="stat-card good"><div class="stat-val" id="r-correct">0</div><div class="stat-label">Správně</div></div>
+    <div class="stat-card bad"><div class="stat-val" id="r-wrong">0</div><div class="stat-label">Špatně</div></div>
+    <div class="stat-card"><div class="stat-val">20</div><div class="stat-label">Celkem</div></div>
+  </div>
+  <button class="restart-btn" onclick="startTest()">🔄 Zkusit znovu</button>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ══════════════════════════════════════════════
+// BANKA OTÁZEK – SLOVNÍ SKLÁDANKA
+// Každá otázka má:
+//   q  = text otázky
+//   img = volitelný obrázek (relativní cesta)
+//   answer = pole slov ve SPRÁVNÉM pořadí
+//   distractors = záměrně chybná slova navíc
+// ══════════════════════════════════════════════
+const BANK = [
+  // KATEGORIE VOZIDEL
+  {
+    q: "Co zahrnuje kategorie L?",
+    answer: ["motorová vozidla", "zpravidla", "s méně", "než čtyřmi koly"],
+    distractors: ["s více", "než šesti koly", "přípojná"]
+  },
+  {
+    q: "Co zahrnuje kategorie M?",
+    answer: ["motorová vozidla", "nejméně čtyři kola", "pro dopravu osob"],
+    distractors: ["pro dopravu nákladů", "méně než čtyři kola", "přípojná vozidla"]
+  },
+  {
+    q: "Co zahrnuje kategorie N?",
+    answer: ["motorová vozidla", "nejméně čtyři kola", "pro dopravu nákladů"],
+    distractors: ["pro dopravu osob", "traktory", "méně než dvě kola"]
+  },
+  {
+    q: "Co je to kategorie O?",
+    answer: ["přípojná vozidla"],
+    distractors: ["pracovní stroje", "traktory", "motorová vozidla", "zvláštní vozidla"]
+  },
+  {
+    q: "Co je to kategorie T?",
+    answer: ["traktory", "zemědělské", "nebo lesnické"],
+    distractors: ["přípojná vozidla", "pracovní stroje", "motorové", "kategorii M"]
+  },
+  // ZÁKLADNÍ POJMY
+  {
+    q: "Co je 'pérování' vozidla?",
+    answer: ["zařízení", "k pružnému zachycování nárazů", "vznikajících při jízdě", "vlivem nerovností vozovky"],
+    distractors: ["k brzdění", "ke změně směru jízdy", "k přenosu hnacího momentu"]
+  },
+  {
+    q: "Co je 'náprava' vozidla?",
+    answer: ["část vozidla", "jíž jsou dvě protější kola", "zavěšena na nosné konstrukci vozidla"],
+    distractors: ["pohání přední kola", "brzdí zadní kola", "přenáší moment motoru"]
+  },
+  {
+    q: "Co je 'řízení' vozidla?",
+    answer: ["ústrojí", "kterým řidič", "udržuje nebo mění", "směr jízdy vozidla"],
+    distractors: ["brzdí vozidlo", "pohání kola", "tlumí vibrace", "přenáší točivý moment"]
+  },
+  {
+    q: "Co je 'nástavba' vozidla?",
+    answer: ["funkční účelová část", "speciálních vozidel", "nezahrnuje budku pro obsluhu"],
+    distractors: ["zavazadlový prostor", "karoserie vozidla", "obsahuje kabinu řidiče", "pohonná soustava"]
+  },
+  // ROZMĚRY A HMOTNOSTI
+  {
+    q: "Jak je definována 'výška vozidla'?",
+    answer: ["vzdálenost", "nejvyššího pevného bodu vozidla", "od základny"],
+    distractors: ["od vozovky k pneumatice", "od střechy k podlaze", "nejnižšího bodu", "od nápravy"]
+  },
+  {
+    q: "Jak je definována 'světlá výška'?",
+    answer: ["vzdálenost", "nejnižšího bodu", "na podvozku vozidla", "od vozovky"],
+    distractors: ["nejvyššího bodu", "od základny", "od kola k rámu", "od pneumatiky k střeše"]
+  },
+  {
+    q: "Co je 'provozní hmotnost' vozidla?",
+    answer: ["hmotnost", "nenaloženého vozidla", "s karoserií", "v pohotovostním stavu"],
+    distractors: ["největší povolená hmotnost", "hmotnost nákladu", "bez paliva a řidiče", "prázdného podvozku"]
+  },
+  {
+    q: "Jaká je největší povolená šířka vozidla kategorie M1?",
+    answer: ["2,50 m"],
+    distractors: ["2,00 m", "2,20 m", "2,55 m", "3,00 m"]
+  },
+  // RÁMY
+  {
+    q: "Jakou hlavní funkci plní rám vozidla?",
+    answer: ["základní nosná část vozidla", "přenáší všechny síly", "slouží k upevnění skupin vozidla"],
+    distractors: ["chrání posádku při nehodě", "tvoří aerodynamický tvar", "přenáší točivý moment motoru"]
+  },
+  {
+    q: "Z čeho se skládá žebřinový rám?",
+    answer: ["ze dvou podélníků", "a z několika příček"],
+    distractors: ["jednoho středního nosníku", "a z bočních desek", "ze tří nosníků", "a z plošiny"]
+  },
+  {
+    q: "Jak je tvořen páteřový rám?",
+    answer: ["středním podélným nosníkem", "ke kterému se připevňuje", "pohonná soustava"],
+    distractors: ["dvěma podélníky", "bočními nosníky", "plošinou jako podlahou", "příčnými výztuhami"]
+  },
+  // KOLA A PNEUMATIKY
+  {
+    q: "Z čeho se skládá vozidlové kolo?",
+    answer: ["z diskového kola", "ráfku", "a pneumatiky"],
+    distractors: ["nápravy", "a ložiska", "brzdového kotouče", "a náboje"]
+  },
+  {
+    q: "Co je 'běhoun' pneumatiky?",
+    answer: ["vrstva pryže", "na vnějším obvodu pláště", "opatřená vzorkem", "přenáší síly mezi kolem a vozovkou"],
+    distractors: ["vnitřní gumová vrstva", "výztužný pás pod kostrou", "zesílená část patky", "těsnicí vrstva"]
+  },
+  {
+    q: "Co je 'patka' pneumatiky?",
+    answer: ["zesílená část pláště", "dosedá na ráfek", "umožňuje montáž a utěsnění pláště"],
+    distractors: ["vnější vrstva s vzorkem", "vnitřní těsnicí vrstva", "přenáší síly na vozovku", "chrání bočnici"]
+  },
+  // NÁPRAVY
+  {
+    q: "Jaký je účel nápravy vozidla?",
+    answer: ["nést tíhu vozidla", "přenášet hnací brzdné a boční síly", "umožnit odpružení vozidla"],
+    distractors: ["řídit směr jízdy", "přenášet točivý moment motoru", "tlumit vibrace karoserie"]
+  },
+  {
+    q: "Co je výhodou tuhé nápravy?",
+    answer: ["jednoduchá konstrukce", "dobrý přenos sil", "minimální ošetřování"],
+    distractors: ["malá neodpérovaná hmota", "nezávislé vykyvování kol", "nízký hluk při jízdě"]
+  },
+  {
+    q: "Co je nevýhodou tuhé nápravy?",
+    answer: ["značná neodpérovaná hmotnost", "větší prostor pro výkyv", "samovolné řízení na nerovné vozovce"],
+    distractors: ["složitá konstrukce", "vysoká cena výroby", "nezávislé vykyvování kol"]
+  },
+  {
+    q: "K čemu slouží Panhárdská tyč?",
+    answer: ["zabraňuje", "vzájemnému příčnému pohybu", "nápravy a vozidla"],
+    distractors: ["přenáší točivý moment", "tlumí svislé vibrace", "umožňuje rejd kol", "brzdí zadní nápravu"]
+  },
+  // KONCEPCE POHONU
+  {
+    q: "Jak je uspořádána klasická koncepce pohonu?",
+    answer: ["motor vpředu podélně", "kloubový hřídel", "pohon zadních kol"],
+    distractors: ["motor vzadu", "pohon předních kol", "motor příčně", "pohon všech kol"]
+  },
+  {
+    q: "Jak se chová vozidlo s předním pohonem?",
+    answer: ["je taženo vpřed", "vzniká nedotáčivost", "stabilní stav"],
+    distractors: ["je tlačeno vzadu", "vzniká přetáčivost", "labilní stav", "neutrální stav"]
+  },
+  {
+    q: "Proč se u pohonu všech kol používá mezinápravový diferenciál?",
+    answer: ["vyrovnává rozdíly", "otáček", "předních a zadních kol"],
+    distractors: ["přenáší brzdný moment", "blokuje kola při prokluzu", "řídí zadní nápravu", "snižuje otáčky"]
+  },
+  // ODPRUŽENÍ
+  {
+    q: "Jaký je účel odpružení vozidla?",
+    answer: ["zmírnit rázy karoserie", "od nerovností vozovky", "udržet kola ve styku s vozovkou"],
+    distractors: ["zvýšit rychlost vozidla", "přenášet točivý moment", "řídit směr jízdy", "brzdné síly"]
+  },
+  {
+    q: "Co je 'progresivita' pružiny?",
+    answer: ["změna tuhosti pružiny", "v závislosti", "na jejím zatížení"],
+    distractors: ["schopnost tlumit vibrace", "pevnost pružiny při lomu", "délka pružiny v klidu", "hmotnost pružiny"]
+  },
+  {
+    q: "Jaká je ideální frekvence kmitů karoserie pro pohodlí jízdy?",
+    answer: ["60 až 80 kmitů za minutu", "rytmus chůze"],
+    distractors: ["100 až 120 kmitů za minutu", "20 až 40 kmitů za minutu", "rytmus dýchání", "rytmus srdce"]
+  },
+  // LOŽISKOVÁ JEDNOTKA
+  {
+    q: "Jaký je hlavní rozdíl ložiskové jednotky 3. generace oproti 2. generaci?",
+    answer: ["příruba na vnitřním i vnějším kroužku", "použitelná pro poháněné", "i nepoháněné kolo"],
+    distractors: ["jen pro nepoháněné kolo", "zabudovaný stejnoběžný kloub", "dělený vnitřní kroužek", "jen pro hnací nápravy"]
+  },
+];
+
+const TOTAL_TIME = 90;
+const Q_PER_ROUND = 20;
+const CIRC = 2 * Math.PI * 20;
+
+let sessionQ = [], current = 0, score = 0, wrong = 0;
+let timerInterval = null, answered = false, timeLeft = TOTAL_TIME;
+let dragSrc = null;
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+
+function startTest(){
+  sessionQ = shuffle(BANK).slice(0, Q_PER_ROUND);
+  current = 0; score = 0; wrong = 0;
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  showQuestion();
+}
+
+function showQuestion(){
+  answered = false;
+  timeLeft = TOTAL_TIME;
+  const q = sessionQ[current];
+
+  document.getElementById('q-num').textContent = `${current+1} / ${Q_PER_ROUND}`;
+  document.getElementById('progress').style.width = `${(current/Q_PER_ROUND)*100}%`;
+  document.getElementById('q-text').textContent = q.q;
+
+  // image
+  const imgEl = document.getElementById('q-img');
+  if(q.img){ imgEl.src='img/'+q.img; imgEl.style.display='block'; }
+  else { imgEl.style.display='none'; imgEl.src=''; }
+
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('answer-zone').innerHTML='';
+  document.getElementById('answer-zone').className='answer-zone';
+
+  // Build shuffled word pool
+  const allWords = shuffle([...q.answer, ...(q.distractors||[])]);
+  const wb = document.getElementById('word-bank');
+  wb.innerHTML='';
+  allWords.forEach(word => {
+    wb.appendChild(makeChip(word, 'bank'));
+  });
+
+  // Timer
+  const ring = document.getElementById('timer-ring');
+  const numEl = document.getElementById('timer-num');
+  ring.style.stroke='#fff'; ring.style.strokeDashoffset=0; numEl.textContent=TOTAL_TIME;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    numEl.textContent=timeLeft;
+    ring.style.strokeDashoffset = CIRC*(1-timeLeft/TOTAL_TIME);
+    if(timeLeft<=15) ring.style.stroke='#ff6b6b';
+    if(timeLeft<=0){ clearInterval(timerInterval); if(!answered) timeUp(); }
+  },1000);
+
+  setupDropZone();
+}
+
+function makeChip(word, type){
+  const chip = document.createElement('span');
+  chip.className = `chip chip-${type}`;
+  chip.textContent = word;
+  chip.draggable = true;
+  chip.dataset.word = word;
+
+  // Click to move
+  chip.addEventListener('click', ()=>{
+    if(answered) return;
+    const zone = document.getElementById('answer-zone');
+    const bank = document.getElementById('word-bank');
+    if(chip.parentElement === bank){
+      chip.className = 'chip chip-placed';
+      zone.appendChild(chip);
+    } else {
+      chip.className = 'chip chip-bank';
+      bank.appendChild(chip);
+    }
+  });
+
+  // Drag
+  chip.addEventListener('dragstart', e=>{
+    dragSrc = chip;
+    chip.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+  });
+  chip.addEventListener('dragend', ()=>{ chip.classList.remove('dragging'); dragSrc=null; });
+  return chip;
+}
+
+function setupDropZone(){
+  const zone = document.getElementById('answer-zone');
+  const bank = document.getElementById('word-bank');
+
+  [zone, bank].forEach(el=>{
+    el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', ()=>el.classList.remove('drag-over'));
+    el.addEventListener('drop', e=>{
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if(!dragSrc || answered) return;
+      if(el === zone){ dragSrc.className='chip chip-placed'; }
+      else { dragSrc.className='chip chip-bank'; }
+      el.appendChild(dragSrc);
+    });
+  });
+}
+
+function checkAnswer(){
+  if(answered) return false;
+  const q = sessionQ[current];
+  const zone = document.getElementById('answer-zone');
+  const placed = [...zone.querySelectorAll('.chip')].map(c=>c.dataset.word);
+  return JSON.stringify(placed) === JSON.stringify(q.answer);
+}
+
+// Auto-check when next is clicked — or manual check
+function evaluateAnswer(){
+  if(answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  const q = sessionQ[current];
+  const zone = document.getElementById('answer-zone');
+  const bank = document.getElementById('word-bank');
+  const placed = [...zone.querySelectorAll('.chip')].map(c=>c.dataset.word);
+  const isCorrect = JSON.stringify(placed) === JSON.stringify(q.answer);
+
+  // Style chips
+  zone.querySelectorAll('.chip').forEach(c=>{
+    c.draggable=false;
+    c.className = q.answer.includes(c.dataset.word) && placed.indexOf(c.dataset.word) === q.answer.indexOf(c.dataset.word)
+      ? 'chip chip-correct' : 'chip chip-wrong';
+  });
+  bank.querySelectorAll('.chip').forEach(c=>{ c.draggable=false; c.style.opacity='.4'; });
+
+  const fb = document.getElementById('feedback');
+  if(isCorrect){
+    score++;
+    zone.classList.add('correct');
+    fb.className='feedback correct';
+    fb.innerHTML='✓ Správně!';
+  } else {
+    wrong++;
+    zone.classList.add('wrong');
+    fb.className='feedback wrong';
+    // Show correct answer
+    const correctHtml = q.answer.map(w=>`<span class="chip chip-correct-answer" style="display:inline-flex;margin:2px 3px;padding:3px 8px;border-radius:6px;font-size:13px">${w}</span>`).join('');
+    fb.innerHTML=`✗ Špatně.<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br>${correctHtml}`;
+  }
+  fb.style.display='block';
+  document.getElementById('next-btn').style.display='block';
+}
+
+function timeUp(){
+  answered = true;
+  wrong++;
+  const q = sessionQ[current];
+  const zone = document.getElementById('answer-zone');
+  const bank = document.getElementById('word-bank');
+  zone.querySelectorAll('.chip').forEach(c=>{ c.draggable=false; c.className='chip chip-wrong'; });
+  bank.querySelectorAll('.chip').forEach(c=>{ c.draggable=false; c.style.opacity='.4'; });
+  zone.classList.add('wrong');
+  const fb = document.getElementById('feedback');
+  const correctHtml = q.answer.map(w=>`<span class="chip chip-correct-answer" style="display:inline-flex;margin:2px 3px;padding:3px 8px;border-radius:6px;font-size:13px">${w}</span>`).join('');
+  fb.className='feedback wrong';
+  fb.innerHTML=`⏱ Čas vypršel!<br><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.6)">Správná odpověď:</span><br>${correctHtml}`;
+  fb.style.display='block';
+  document.getElementById('next-btn').style.display='block';
+}
+
+function nextQuestion(){
+  if(!answered){ evaluateAnswer(); return; }
+  current++;
+  if(current >= Q_PER_ROUND) showResults();
+  else showQuestion();
+}
+
+function showResults(){
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('result-screen').style.display='block';
+  const pct = Math.round((score/Q_PER_ROUND)*100);
+  document.getElementById('r-pct').innerHTML=`${pct}<span>%</span>`;
+  document.getElementById('r-correct').textContent=score;
+  document.getElementById('r-wrong').textContent=wrong;
+
+  let emoji='😔', msg='Bude potřeba více procvičit.', grade='', gradeClass='grade-4';
+  if(pct>=90){emoji='🏆';msg='Výborný výsledek! Výborně.';grade='Výborně (1)';gradeClass='grade-1';}
+  else if(pct>=75){emoji='🎉';msg='Chvalitebný výsledek!';grade='Chvalitebně (2)';gradeClass='grade-2';}
+  else if(pct>=55){emoji='👍';msg='Dobrý výsledek, ale je co zlepšovat.';grade='Dobře (3)';gradeClass='grade-3';}
+  else{emoji='😔';msg='Nedostatečné. Projdi si učivo znovu.';grade='Nedostatečně (5)';gradeClass='grade-4';}
+
+  document.getElementById('r-emoji').textContent=emoji;
+  document.getElementById('r-msg').textContent=msg;
+  const gb = document.getElementById('r-grade');
+  gb.textContent=grade; gb.className=`grade-badge ${gradeClass}`;
+  document.getElementById('progress').style.width='100%';
+}
+
+// Clicking "Další" without placing words evaluates empty answer
+document.getElementById('next-btn').addEventListener('click', ()=>{
+  if(!answered){ evaluateAnswer(); }
+  else { nextQuestion(); }
+}, {capture:true});
+// Override the onclick to use evaluateAnswer flow
+document.getElementById('next-btn').removeAttribute('onclick');
+</script>
+</body>
+</html>
